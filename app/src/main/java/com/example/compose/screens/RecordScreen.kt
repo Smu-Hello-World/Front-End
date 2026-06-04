@@ -31,6 +31,10 @@ import com.example.compose.network.RetrofitClient
 import retrofit2.Call
 import retrofit2.Response
 import retrofit2.Callback
+import androidx.compose.foundation.Canvas
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.material3.Button
 
 private fun loadTransactions(
     jsonString: String
@@ -105,7 +109,7 @@ fun RecordScreen() {
         if (json == "데이터 없음") {
             return@LaunchedEffect
         }
-        val transactions =
+        transactions =
             loadTransactions(json)
 
         val requestList: List<AnalyzeRequest> =
@@ -136,6 +140,11 @@ fun RecordScreen() {
                         response: Response<AnalyzeResponse>
                     ) {
 
+                        Log.d(
+                            "API_RESULT",
+                            response.body().toString()
+                        )
+
                         analyzeResult =
                             response.body()
                     }
@@ -145,7 +154,11 @@ fun RecordScreen() {
                         t: Throwable
                     ) {
 
-                        t.printStackTrace()
+                        Log.e(
+                            "API_TEST",
+                            "실패",
+                            t
+                        )
                     }
                 }
             )
@@ -166,6 +179,24 @@ fun RecordScreen() {
         item {
 
             RecordHeader()
+
+            val context = LocalContext.current
+
+            Button(
+
+                onClick = {
+
+                    insertDummyData(
+                        context
+                    )
+                }
+
+            ) {
+
+                Text(
+                    "더미 데이터 생성"
+                )
+            }
 
             Spacer(
                 Modifier.height(20.dp)
@@ -197,7 +228,9 @@ fun RecordScreen() {
                 Modifier.height(16.dp)
             )
 
-            CategoryCard()
+            CategoryCard(
+                analyzeResult
+            )
 
             Spacer(
                 Modifier.height(20.dp)
@@ -461,7 +494,27 @@ fun StatusCard() {
 }
 
 @Composable
-fun CategoryCard() {
+fun CategoryCard(
+    result: AnalyzeResponse?
+) {
+    val categories = listOf(
+
+        "식비" to (result?.food_money ?: 0),
+
+        "카페" to (result?.cafe_money ?: 0),
+
+        "교통" to (result?.taxi_money ?: 0),
+
+        "쇼핑" to (result?.shop_money ?: 0),
+
+        "편의점" to (result?.cvs_money ?: 0)
+    )
+
+    val total =
+
+        categories.sumOf {
+            it.second
+        }
 
     Card(
 
@@ -502,44 +555,127 @@ fun CategoryCard() {
 
                 modifier =
                     Modifier
-                        .size(160.dp)
-                        .align(
-                            Alignment.CenterHorizontally
-                        )
-                        .background(
-                            Color(0xFFEAF6EC),
-                            CircleShape
-                        ),
+                        .fillMaxWidth(),
 
                 contentAlignment =
                     Alignment.Center
             ) {
 
+                Canvas(
+
+                    modifier =
+                        Modifier.size(180.dp)
+                ) {
+
+                    val colors = listOf(
+
+                        Color(0xFF4CAF50),
+
+                        Color(0xFFFF9800),
+
+                        Color(0xFF2196F3),
+
+                        Color(0xFFE91E63),
+
+                        Color(0xFF9C27B0)
+                    )
+
+                    var startAngle = -90f
+
+                    categories.forEachIndexed {
+
+                            index,
+                            category ->
+
+                        val value =
+                            category.second
+
+                        val sweepAngle =
+
+                            if (total == 0)
+
+                                0f
+
+                            else
+
+                                value.toFloat() /
+                                        total *
+                                        360f
+
+                        drawArc(
+
+                            color =
+                                colors[index],
+
+                            startAngle =
+                                startAngle,
+
+                            sweepAngle =
+                                sweepAngle,
+
+                            useCenter =
+                                false,
+
+                            style =
+                                Stroke(
+                                    width = 40f
+                                ),
+
+                            size =
+                                Size(
+                                    size.width,
+                                    size.height
+                                )
+                        )
+
+                        startAngle +=
+                            sweepAngle
+                    }
+                }
+
                 Text(
 
-                    text = "39%",
+                    text =
 
-                    fontSize = 30.sp,
+                        if (total == 0)
+
+                            "0원"
+
+                        else
+
+                            "${total}원",
 
                     fontWeight =
-                        FontWeight.Bold,
-
-                    color =
-                        Color(0xFF2CA85E)
+                        FontWeight.Bold
                 )
             }
 
             Spacer(
                 Modifier.height(20.dp)
             )
+            categories.forEach {
 
-            Text("🍴 식비 39%")
-            Spacer(Modifier.height(6.dp))
+                val percent =
 
-            Text("🚕 교통 18%")
-            Spacer(Modifier.height(6.dp))
+                    if (total == 0)
 
-            Text("🛍 쇼핑 15%")
+                        0
+
+                    else
+
+                        (
+                                it.second * 100
+                                        / total
+                                )
+
+                Text(
+                    "${it.first} ${percent}%"
+                )
+
+                Spacer(
+                    Modifier.height(6.dp)
+                )
+            }
         }
     }
 }
@@ -672,4 +808,65 @@ fun TransactionItem(
             )
         }
     }
+}
+
+private fun insertDummyData(
+    context: android.content.Context
+) {
+
+    JsonManager.saveBankData(
+        context,
+        "입금",
+        "1500000",
+        "회사",
+        "입출금통장"
+    )
+
+    JsonManager.saveBankData(
+        context,
+        "출금",
+        "4500",
+        "",
+        "스타벅스"
+    )
+
+    JsonManager.saveBankData(
+        context,
+        "출금",
+        "12000",
+        "",
+        "맥도날드"
+    )
+
+    JsonManager.saveBankData(
+        context,
+        "출금",
+        "8000",
+        "",
+        "카카오T"
+    )
+
+    JsonManager.saveBankData(
+        context,
+        "출금",
+        "3500",
+        "",
+        "GS25"
+    )
+
+    JsonManager.saveBankData(
+        context,
+        "출금",
+        "59000",
+        "",
+        "무신사"
+    )
+
+    JsonManager.saveBankData(
+        context,
+        "출금",
+        "15000",
+        "",
+        "올리브영"
+    )
 }
