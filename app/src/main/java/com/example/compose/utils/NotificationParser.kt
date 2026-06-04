@@ -15,7 +15,6 @@ object NotificationParser {
 
     fun parse(text: String): ParseResult {
 
-        // 입금 / 출금 추출
         val type = when {
 
             text.contains("입금") -> "입금"
@@ -25,42 +24,44 @@ object NotificationParser {
             else -> "알 수 없음"
         }
 
-        // 금액 추출
-        val moneyRegex = Regex("([0-9,]+)원")
+        val moneyRegex =
+            Regex("(입금|출금)\\s*([0-9,]+)원")
 
-        val money = moneyRegex
-            .find(text)
-            ?.groupValues?.get(1)
-            ?.replace(",", "")
-            ?: "0"
-
-        // 보내는 사람 → 받는 사람
-        val arrowRegex =
-            Regex("(.+)\\s→\\s(.+)")
-
-        val arrowMatch =
-            arrowRegex.find(text)
+        val money =
+            moneyRegex.find(text)
+                ?.groupValues?.get(2)
+                ?.replace(",", "")
+                ?: "0"
 
         var sender = ""
         var receiver = ""
 
-        if (arrowMatch != null) {
+        val arrowRegex =
+            Regex("(.+)\\s→\\s(.+)")
+
+        val match =
+            arrowRegex.find(text)
+
+        if (match != null) {
 
             sender =
-                arrowMatch.groupValues[1]
+                match.groupValues[1]
                     .trim()
 
             receiver =
-                arrowMatch.groupValues[2]
+                match.groupValues[2]
                     .trim()
         }
 
         return ParseResult(
 
-            type,
-            money,
-            sender,
-            receiver
+            type = type,
+
+            money = money,
+
+            sender = sender,
+
+            receiver = receiver
         )
     }
 }
