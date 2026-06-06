@@ -67,6 +67,9 @@ import retrofit2.Callback
 import retrofit2.Response
 import com.example.compose.MainActivity
 import com.example.compose.Screen
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 
 @Composable
 fun HomeScreen(
@@ -79,6 +82,10 @@ fun HomeScreen(
 
     var outcomeMoney by remember {
         mutableIntStateOf(0)
+    }
+
+    var analyzeResult by remember {
+        mutableStateOf<AnalyzeResponse?>(null)
     }
 
     val context = LocalContext.current
@@ -98,6 +105,7 @@ fun HomeScreen(
 
             val requestList =
                 mutableListOf<AnalyzeRequest>()
+
 
             for (i in 0 until jsonArray.length()) {
 
@@ -139,6 +147,8 @@ fun HomeScreen(
 
                             outcomeMoney =
                                 result?.outcome_money ?: 0
+
+                            analyzeResult = result
                         }
 
                         override fun onFailure(
@@ -172,30 +182,19 @@ fun HomeScreen(
                 HeroSection()
                 SummaryCard(
                     income = incomeMoney,
-                    outcome = outcomeMoney
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Button(
-                    onClick = {
-
-                        Log.d(
-                            "TEST_MONEY",
-                            "income=$incomeMoney, outcome=$outcomeMoney"
-                        )
-
+                    outcome = outcomeMoney,
+                    onDetailClick = {
+                        onScreenChange(Screen.ANALYSIS)
                     }
-                ) {
-                    Text("금액 확인")
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
+                )
                 Spacer(modifier = Modifier.height(16.dp))
                 TipCard()
                 Spacer(modifier = Modifier.height(16.dp))
                 CategoryHeader()
                 Spacer(modifier = Modifier.height(10.dp))
-                TopCategoryRow()
+                TopCategoryRow(
+                    analyzeResult
+                )
                 Spacer(modifier = Modifier.height(12.dp))
                 ResultCard()
                 Spacer(modifier = Modifier.height(8.dp))
@@ -208,8 +207,7 @@ fun HomeScreen(
 private fun TopBar() {
     Row(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 4.dp),
+            .fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
@@ -219,26 +217,6 @@ private fun TopBar() {
             modifier = Modifier.size(28.dp)
         )
 
-        Spacer(modifier = Modifier.weight(1f))
-
-        Box(
-            contentAlignment = Alignment.TopEnd
-        ) {
-            Icon(
-                imageVector = Icons.Default.Notifications,
-                contentDescription = null,
-                tint = Color(0xFF111111),
-                modifier = Modifier.size(28.dp)
-            )
-
-            Box(
-                modifier = Modifier
-                    .offset(x = (-1).dp, y = 2.dp)
-                    .size(9.dp)
-                    .clip(CircleShape)
-                    .background(Color.Red)
-            )
-        }
     }
 }
 
@@ -354,7 +332,8 @@ private fun TipCard() {
 @Composable
 private fun SummaryCard(
     income: Int,
-    outcome: Int
+    outcome: Int,
+    onDetailClick: () -> Unit
 ) {
     val context = LocalContext.current
 
@@ -472,12 +451,7 @@ private fun SummaryCard(
                     fontWeight = FontWeight.Bold,
                     fontFamily = Pretendard,
                     modifier = Modifier.clickable {
-                        context.startActivity(
-                            Intent(
-                                context,
-                                AnalysisActivity::class.java
-                            )
-                        )
+                        onDetailClick()
                     }
                 )
             }
@@ -498,46 +472,91 @@ private fun CategoryHeader() {
             fontFamily = Pretendard,
             color = Color(0xFF111111)
         )
-        Spacer(modifier = Modifier.weight(1f))
-        Text(
-            text = "전체 보기 >",
-            fontSize = 11.sp,
-            fontFamily = Pretendard,
-            color = Color(0xFF666666)
-        )
     }
 }
 
 @Composable
-private fun TopCategoryRow() {
+private fun TopCategoryRow(
+    result: AnalyzeResponse?
+) {
+
+    val categories = listOf(
+
+        Triple(
+            "식비",
+            result?.food_money ?: 0,
+            Pair("🍴", Color(0xFFEEF8EA))
+        ),
+
+        Triple(
+            "카페",
+            result?.cafe_money ?: 0,
+            Pair("☕", Color(0xFFEAF4FF))
+        ),
+
+        Triple(
+            "편의점",
+            result?.cvs_money ?: 0,
+            Pair("🏪", Color(0xFFFFF4E5))
+        ),
+
+        Triple(
+            "교통",
+            result?.taxi_money ?: 0,
+            Pair("🚕", Color(0xFFFFF4E5))
+        ),
+
+        Triple(
+            "쇼핑",
+            result?.shop_money ?: 0,
+            Pair("👜", Color(0xFFF3EEFF))
+        )
+    )
+
+    val total =
+        categories.sumOf { it.second }
+
+    val top3 =
+        categories
+            .sortedByDescending { it.second }
+            .take(3)
+
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        SmallCategoryCard(
-            modifier = Modifier.weight(1f),
-            bg = Color(0xFFEEF8EA),
-            icon = "🍴",
-            title = "식비",
-            amount = "172,000원",
-            percent = "39%"
-        )
-        SmallCategoryCard(
-            modifier = Modifier.weight(1f),
-            bg = Color(0xFFFFF4E5),
-            icon = "🚕",
-            title = "교통",
-            amount = "78,000원",
-            percent = "18%"
-        )
-        SmallCategoryCard(
-            modifier = Modifier.weight(1f),
-            bg = Color(0xFFF3EEFF),
-            icon = "👜",
-            title = "쇼핑",
-            amount = "65,000원",
-            percent = "15%"
-        )
+
+        top3.forEach { category ->
+
+            val title = category.first
+            val amount = category.second
+            val icon = category.third.first
+            val color = category.third.second
+
+            val percent =
+
+                if (total == 0)
+                    "0%"
+                else
+                    "${amount * 100 / total}%"
+
+            SmallCategoryCard(
+
+                modifier =
+                    Modifier.weight(1f),
+
+                bg = color,
+
+                icon = icon,
+
+                title = title,
+
+                amount =
+                    "%,d원".format(amount),
+
+                percent = percent
+            )
+        }
     }
 }
 

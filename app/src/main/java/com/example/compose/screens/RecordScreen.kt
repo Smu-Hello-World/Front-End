@@ -24,7 +24,6 @@ import com.example.compose.ui.theme.Pretendard
 import com.example.compose.utils.JsonManager
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
-import androidx.compose.foundation.shape.CircleShape
 import com.example.compose.network.AnalyzeRequest
 import com.example.compose.network.AnalyzeResponse
 import com.example.compose.network.RetrofitClient
@@ -35,6 +34,8 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.material3.Button
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.material3.LinearProgressIndicator
 
 private fun loadTransactions(
     jsonString: String
@@ -93,7 +94,11 @@ fun RecordScreen() {
         )
     }
 
-    LaunchedEffect(Unit) {
+    var reloadKey by remember {
+        mutableIntStateOf(0)
+    }
+
+    LaunchedEffect(reloadKey) {
 
         val json =
             JsonManager.readBankData(
@@ -177,9 +182,6 @@ fun RecordScreen() {
     ) {
 
         item {
-
-            RecordHeader()
-
             val context = LocalContext.current
 
             Button(
@@ -198,15 +200,33 @@ fun RecordScreen() {
                 )
             }
 
-            Spacer(
-                Modifier.height(20.dp)
-            )
+            Button(
 
-            FilterRow()
+                onClick = {
 
-            Spacer(
-                Modifier.height(16.dp)
-            )
+                    val deleted =
+                        context.deleteFile(
+                            "bank_data.json"
+                        )
+
+                    Log.d(
+                        "DELETE",
+                        "삭제 성공: $deleted"
+                    )
+
+                    transactions = emptyList()
+
+                    analyzeResult = null
+
+                    reloadKey++
+                }
+
+            ) {
+
+                Text(
+                    "데이터 초기화"
+                )
+            }
 
             MonthSelector()
 
@@ -254,16 +274,6 @@ fun RecordScreen() {
     }
 }
 
-@Composable
-fun RecordHeader() {
-
-    Text(
-        text = "기록",
-        fontSize = 34.sp,
-        fontWeight = FontWeight.Bold,
-        fontFamily = Pretendard
-    )
-}
 
 @Composable
 fun SummarySection(
@@ -308,24 +318,6 @@ fun SummarySection(
     )
 }
 
-@Composable
-fun FilterRow() {
-
-    Row(
-
-        modifier = Modifier.fillMaxWidth(),
-
-        horizontalArrangement =
-            Arrangement.SpaceEvenly
-    ) {
-
-        FilterChip("전체", true)
-
-        FilterChip("수입", false)
-
-        FilterChip("지출", false)
-    }
-}
 
 @Composable
 fun FilterChip(
@@ -392,13 +384,24 @@ fun MonthSelector() {
 @Composable
 fun RecordSummaryCard(
     income: Int,
-
     outcome: Int
 ) {
 
+    val percent =
+
+        if (income == 0)
+            0f
+        else
+            (outcome.toFloat() / income * 100f)
+                .coerceAtMost(100f)
+
     Card(
 
-        shape = RoundedCornerShape(24.dp),
+        modifier =
+            Modifier.fillMaxWidth(),
+
+        shape =
+            RoundedCornerShape(24.dp),
 
         colors =
             CardDefaults.cardColors(
@@ -407,40 +410,153 @@ fun RecordSummaryCard(
 
     ) {
 
-        Column(
+        Row(
 
-            modifier = Modifier.padding(20.dp)
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp),
 
+            horizontalArrangement =
+                Arrangement.SpaceBetween,
+
+            verticalAlignment =
+                Alignment.CenterVertically
         ) {
 
-            Text(
-                "이번 달 지출",
-                color = Color.Gray
-            )
+            Column(
+
+                modifier =
+                    Modifier.weight(1f)
+
+            ) {
+
+                Text(
+                    text = "이번 달 지출",
+                    color = Color.Gray,
+                    fontSize = 14.sp
+                )
+
+                Spacer(
+                    Modifier.height(12.dp)
+                )
+
+                Text(
+                    text = "%,d원".format(outcome),
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Bold
+                )
+
+                Spacer(
+                    Modifier.height(10.dp)
+                )
+
+                Text(
+                    text = "예산 %,d원".format(income),
+                    color = Color.Gray,
+                    fontSize = 14.sp
+                )
+
+                Spacer(
+                    Modifier.height(16.dp)
+                )
+
+                LinearProgressIndicator(
+
+                    progress = { percent / 100f },
+
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .height(8.dp),
+
+                    color = Color(0xFF52C878),
+
+                    trackColor =
+                        Color(0xFFEAEAEA)
+                )
+            }
 
             Spacer(
-                Modifier.height(8.dp)
+                Modifier.width(24.dp)
             )
 
-            Text(
+            Box(
 
-                text =
-                    "${outcome}원",
+                contentAlignment =
+                    Alignment.Center
 
-                fontSize = 32.sp,
+            ) {
 
-                fontWeight =
-                    FontWeight.Bold
-            )
-            Spacer(
-                Modifier.height(8.dp)
-            )
+                Canvas(
 
-            Text(
+                    modifier =
+                        Modifier.size(90.dp)
 
-                text =
-                    "예산 " + "${income}원",
-            )
+                ) {
+
+                    drawArc(
+
+                        color =
+                            Color(0xFFE5F1E8),
+
+                        startAngle = 0f,
+
+                        sweepAngle = 360f,
+
+                        useCenter = false,
+
+                        style =
+                            Stroke(
+                                width = 20f
+                            )
+                    )
+
+                    drawArc(
+
+                        color =
+                            Color(0xFF52C878),
+
+                        startAngle = -90f,
+
+                        sweepAngle =
+                            360f *
+                                    (percent / 100f),
+
+                        useCenter = false,
+
+                        style =
+                            Stroke(
+                                width = 20f
+                            )
+                    )
+                }
+
+                Column(
+
+                    horizontalAlignment =
+                        Alignment.CenterHorizontally
+
+                ) {
+
+                    Text(
+
+                        text =
+                            "${percent.toInt()}%",
+
+                        fontSize = 20.sp,
+
+                        fontWeight =
+                            FontWeight.Bold
+                    )
+
+                    Text(
+                        text = "예산 대비",
+                        color = Color.Gray,
+                        fontSize = 8.sp
+                    )
+                }
+            }
         }
     }
 }
@@ -564,7 +680,7 @@ fun CategoryCard(
                 Canvas(
 
                     modifier =
-                        Modifier.size(180.dp)
+                        Modifier.size(120.dp)
                 ) {
 
                     val colors = listOf(
@@ -618,7 +734,7 @@ fun CategoryCard(
 
                             style =
                                 Stroke(
-                                    width = 40f
+                                    width = 80f
                                 ),
 
                             size =

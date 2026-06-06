@@ -159,42 +159,6 @@ fun MainPagerScreen() {
                         Text("분석")
                     }
                 )
-
-                NavigationBarItem(
-                    selected = pagerState.currentPage == 3,
-                    onClick = {
-                        scope.launch {
-                            pagerState.animateScrollToPage(3)
-                        }
-                    },
-                    icon = {
-                        Icon(
-                            Icons.Default.Notifications,
-                            null
-                        )
-                    },
-                    label = {
-                        Text("알림")
-                    }
-                )
-
-                NavigationBarItem(
-                    selected = pagerState.currentPage == 4,
-                    onClick = {
-                        scope.launch {
-                            pagerState.animateScrollToPage(4)
-                        }
-                    },
-                    icon = {
-                        Icon(
-                            Icons.Default.PersonOutline,
-                            null
-                        )
-                    },
-                    label = {
-                        Text("마이")
-                    }
-                )
             }
         }
 
@@ -214,7 +178,27 @@ fun MainPagerScreen() {
 
                 0 -> HomeScreen(
                     currentScreen = Screen.HOME,
-                    onScreenChange = {}
+                    onScreenChange = { screen ->
+
+                        when(screen) {
+
+                            Screen.RECORD -> {
+
+                                scope.launch {
+                                    pagerState.animateScrollToPage(1)
+                                }
+                            }
+
+                            Screen.ANALYSIS -> {
+
+                                scope.launch {
+                                    pagerState.animateScrollToPage(2)
+                                }
+                            }
+
+                            else -> {}
+                        }
+                    }
                 )
 
                 1 -> RecordScreen()
