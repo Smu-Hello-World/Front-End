@@ -165,7 +165,6 @@ fun MainPagerScreen() {
             state = pagerState,
 
             modifier = Modifier
-                .padding(padding)
                 .fillMaxSize()
         ) { page ->
 

@@ -155,7 +155,9 @@ fun HomeScreen(
                 .fillMaxSize()
                 .padding(padding)
                 .padding(horizontal = 16.dp),
-            contentPadding = PaddingValues(top = 12.dp, bottom = 18.dp)
+            contentPadding = PaddingValues(
+                bottom = 100.dp
+            )
         ) {
             item {
                 TopBar()
@@ -294,7 +296,7 @@ private fun TipCard() {
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "커피 한 잔 대신 텀블러를 챙겨보세요 ☕",
+                    text = "커피 한 잔 대신 텀블러를 챙겨보세요",
                     fontSize = 11.sp,
                     fontFamily = Pretendard,
                     color = Color(0xFF444444)

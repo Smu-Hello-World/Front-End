@@ -176,7 +176,11 @@ fun RecordScreen() {
             .background(
                 Color(0xFFF8F7F3)
             )
-            .padding(16.dp)
+            .padding(16.dp),
+
+        contentPadding = PaddingValues(
+            bottom = 130.dp
+        )
 
     ) {
 
