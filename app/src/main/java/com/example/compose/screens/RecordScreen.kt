@@ -20,7 +20,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.compose.ui.theme.Pretendard
 import com.example.compose.utils.JsonManager
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue

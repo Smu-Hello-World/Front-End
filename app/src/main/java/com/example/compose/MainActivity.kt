@@ -15,8 +15,6 @@ import androidx.compose.material3.MaterialTheme
 import com.example.compose.screens.HomeScreen
 import com.example.compose.screens.RecordScreen
 import com.example.compose.screens.AnalysisScreen
-import com.example.compose.screens.NotificationScreen
-import com.example.compose.screens.MyScreen
 
 import com.example.compose.service.NotificationService
 import androidx.compose.runtime.Composable
@@ -26,8 +24,6 @@ import androidx.compose.foundation.pager.rememberPagerState
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.PersonOutline
 import androidx.compose.material.icons.filled.ShowChart
 import androidx.compose.material.icons.outlined.ListAlt
 
@@ -95,7 +91,7 @@ fun MainPagerScreen() {
 
     val pagerState = rememberPagerState(
         initialPage = 0,
-        pageCount = { 5 }
+        pageCount = { 3 }
     )
 
     val scope = rememberCoroutineScope()
@@ -165,7 +161,6 @@ fun MainPagerScreen() {
     ) { padding ->
 
 
-
         HorizontalPager(
             state = pagerState,
 
@@ -204,10 +199,6 @@ fun MainPagerScreen() {
                 1 -> RecordScreen()
 
                 2 -> AnalysisScreen()
-
-                3 -> NotificationScreen()
-
-                4 -> MyScreen()
             }
         }
     }
