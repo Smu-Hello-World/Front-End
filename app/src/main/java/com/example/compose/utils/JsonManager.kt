@@ -40,7 +40,6 @@ object JsonManager {
 
             JSONArray()
         }
-
         jsonArray.put(jsonObject)
 
         file.writeText(jsonArray.toString())

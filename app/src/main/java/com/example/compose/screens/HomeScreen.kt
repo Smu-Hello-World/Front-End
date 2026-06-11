@@ -179,7 +179,6 @@ fun HomeScreen(
                     analyzeResult
                 )
                 Spacer(modifier = Modifier.height(12.dp))
-                ResultCard()
             }
         }
     }
@@ -583,52 +582,6 @@ private fun SmallCategoryCard(
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
                 fontFamily = Pretendard,
-                color = Color(0xFF35A65A)
-            )
-        }
-    }
-}
-
-@Composable
-private fun ResultCard() {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFF4F7EE)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 14.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(text = "☁", fontSize = 28.sp)
-            Spacer(modifier = Modifier.width(12.dp))
-
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
-                Text(
-                    text = "괜찮아요!",
-                    fontFamily = Pretendard,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF35A65A)
-                )
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = "예산 범위 내에서 소비하고 있어요.",
-                    fontFamily = Pretendard,
-                    fontSize = 12.sp,
-                    color = Color(0xFF444444)
-                )
-            }
-
-            Text(
-                text = ">",
-                fontFamily = Pretendard,
-                fontSize = 18.sp,
                 color = Color(0xFF35A65A)
             )
         }
