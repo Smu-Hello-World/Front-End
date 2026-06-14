@@ -187,49 +187,52 @@ fun RecordScreen() {
         item {
             val context = LocalContext.current
 
-            Button(
-
-                onClick = {
-
-                    insertDummyData(
-                        context
-                    )
-                }
-
-            ) {
-
-                Text(
-                    "더미 데이터 생성"
-                )
-            }
-
-            Button(
-
-                onClick = {
-
-                    val deleted =
-                        context.deleteFile(
-                            "bank_data.json"
-                        )
-
-                    Log.d(
-                        "DELETE",
-                        "삭제 성공: $deleted"
-                    )
-
-                    transactions = emptyList()
-
-                    analyzeResult = null
-
-                    reloadKey++
-                }
-
-            ) {
-
-                Text(
-                    "데이터 초기화"
-                )
-            }
+//            Button(
+//
+//                onClick = {
+//
+//                    insertDummyData(
+//                        context
+//                    )
+//                }
+//
+//            ) {
+//
+//                Text(
+//                    "더미 데이터 생성"
+//                )
+//            }
+//
+//            Button(
+//
+//                onClick = {
+//
+//                    val deleted =
+//                        context.deleteFile(
+//                            "bank_data.json"
+//                        )
+//
+//                    Log.d(
+//                        "DELETE",
+//                        "삭제 성공: $deleted"
+//                    )
+//
+//                    transactions = emptyList()
+//
+//                    analyzeResult = null
+//
+//                    reloadKey++
+//                }
+//
+//            ) {
+//
+//                Text(
+//                    "데이터 초기화"
+//                )
+//            }
+            Spacer(
+                Modifier.height(30.dp)
+            )
 
             MonthSelector()
 

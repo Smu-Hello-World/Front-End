@@ -52,6 +52,19 @@ import retrofit2.Response
 import com.example.compose.Screen
 import androidx.compose.runtime.mutableStateOf
 
+data class CategoryItem(
+
+    val title: String,
+
+    val amount: Int,
+
+    val iconRes: Int,
+
+    val bgColor: Color,
+
+    val accentColor: Color
+)
+
 @Composable
 fun HomeScreen(
     currentScreen: Screen,
@@ -460,46 +473,56 @@ private fun CategoryHeader() {
 private fun TopCategoryRow(
     result: AnalyzeResponse?
 ) {
-
     val categories = listOf(
 
-        Triple(
+        CategoryItem(
             "식비",
             result?.food_money ?: 0,
-            Pair("🍴", Color(0xFFEEF8EA))
+            R.drawable.food,
+            Color(0xFFEEF8EA),
+            Color(0xFF56C58A)
         ),
 
-        Triple(
+        CategoryItem(
             "카페",
             result?.cafe_money ?: 0,
-            Pair("☕", Color(0xFFEAF4FF))
+            R.drawable.cafe,
+            Color(0xFFEAF4FF),
+            Color(0xFF4AA8FF)
+
         ),
 
-        Triple(
+        CategoryItem(
             "편의점",
             result?.cvs_money ?: 0,
-            Pair("🏪", Color(0xFFFFF4E5))
+            R.drawable.store,
+            Color(0xFFFFF4E5),
+            Color(0xFFFFB347)
         ),
 
-        Triple(
+        CategoryItem(
             "교통",
             result?.taxi_money ?: 0,
-            Pair("🚕", Color(0xFFFFF4E5))
+            R.drawable.car,
+            Color(0xFFFFF4E5),
+            Color(0xFFFF9D2E)
         ),
 
-        Triple(
+        CategoryItem(
             "쇼핑",
             result?.shop_money ?: 0,
-            Pair("👜", Color(0xFFF3EEFF))
+            R.drawable.shopping,
+            Color(0xFFF3EEFF),
+            Color(0xFF6366F1)
         )
     )
 
     val total =
-        categories.sumOf { it.second }
+        categories.sumOf { it.amount }
 
     val top3 =
         categories
-            .sortedByDescending { it.second }
+            .sortedByDescending { it.amount }
             .take(3)
 
     Row(
@@ -509,10 +532,13 @@ private fun TopCategoryRow(
 
         top3.forEach { category ->
 
-            val title = category.first
-            val amount = category.second
-            val icon = category.third.first
-            val color = category.third.second
+            val title = category.title
+
+            val amount = category.amount
+
+            val iconRes = category.iconRes
+
+            val color = category.bgColor
 
             val percent =
 
@@ -521,21 +547,24 @@ private fun TopCategoryRow(
                 else
                     "${amount * 100 / total}%"
 
+            val accentColor =
+                category.accentColor
+
             SmallCategoryCard(
 
-                modifier =
-                    Modifier.weight(1f),
+                modifier = Modifier.weight(1f),
 
                 bg = color,
 
-                icon = icon,
+                iconRes = iconRes,
 
                 title = title,
 
-                amount =
-                    "%,d원".format(amount),
+                amount = "%,d원".format(amount),
 
-                percent = percent
+                percent = percent,
+
+                accentColor = accentColor
             )
         }
     }
@@ -545,45 +574,76 @@ private fun TopCategoryRow(
 private fun SmallCategoryCard(
     modifier: Modifier,
     bg: Color,
-    icon: String,
+    iconRes: Int,
     title: String,
     amount: String,
-    percent: String
+    percent: String,
+    accentColor: Color
 ) {
     Card(
         modifier = modifier.height(92.dp),
         shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = bg),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        colors = CardDefaults.cardColors(
+            containerColor = bg
+        )
     ) {
-        Column(
+        Row(
+
             modifier = Modifier
                 .fillMaxSize()
-                .padding(10.dp)
+                .padding(6.dp),
+
+            verticalAlignment =
+                Alignment.CenterVertically
         ) {
-            Text(text = icon, fontSize = 16.sp)
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = title,
-                fontSize = 11.sp,
-                fontFamily = Pretendard,
-                color = Color(0xFF444444)
+
+            Image(
+
+                painter =
+                    painterResource(iconRes),
+
+                contentDescription = null,
+
+                modifier = Modifier.size(20.dp)
             )
-            Text(
-                text = amount,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold,
-                fontFamily = Pretendard,
-                color = Color(0xFF111111)
+
+            Spacer(
+                modifier = Modifier.width(10.dp)
             )
-            Spacer(modifier = Modifier.height(2.dp))
-            Text(
-                text = percent,
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Bold,
-                fontFamily = Pretendard,
-                color = Color(0xFF35A65A)
-            )
+
+            Column {
+
+                Text(
+
+                    text = title,
+
+                    fontSize = 10.sp,
+
+                    fontWeight = FontWeight.Medium,
+
+                    color = Color.Gray
+                )
+
+                Text(
+
+                    text = amount,
+
+                    fontSize = 12.sp,
+
+                    fontWeight = FontWeight.SemiBold
+                )
+
+                Text(
+
+                    text = percent,
+
+                    fontSize = 12.sp,
+
+                    fontWeight = FontWeight.SemiBold,
+
+                    color = accentColor
+                )
+            }
         }
     }
 }
