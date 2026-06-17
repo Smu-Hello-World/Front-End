@@ -35,8 +35,10 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.material3.Button
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.clickable
 
-private fun loadTransactions(
+fun loadTransactions(
     jsonString: String
 ): List<Transaction> {
 
@@ -83,6 +85,11 @@ fun RecordScreen() {
         )
     }
 
+    var selectedMonth by remember {
+
+        mutableStateOf("")
+    }
+
     val context =
         LocalContext.current
 
@@ -97,7 +104,10 @@ fun RecordScreen() {
         mutableIntStateOf(0)
     }
 
-    LaunchedEffect(reloadKey) {
+    LaunchedEffect(
+        reloadKey,
+        selectedMonth
+    ) {
 
         val json =
             JsonManager.readBankData(
@@ -116,9 +126,34 @@ fun RecordScreen() {
         transactions =
             loadTransactions(json)
 
+        if (
+            transactions.isNotEmpty() &&
+            selectedMonth.isEmpty()
+        ) {
+
+            selectedMonth =
+
+                getYearMonth(
+
+                    transactions.maxBy {
+                        it.time
+                    }.time
+                )
+        }
+
+        val monthTransactions =
+
+            transactions.filter {
+
+                getYearMonth(
+                    it.time
+                ) == selectedMonth
+            }
+
+
         val requestList: List<AnalyzeRequest> =
 
-            transactions.map {
+            monthTransactions.map {
 
                 AnalyzeRequest(
 
@@ -167,6 +202,14 @@ fun RecordScreen() {
                 }
             )
     }
+    val monthTransactions =
+
+        transactions.filter {
+
+            getYearMonth(
+                it.time
+            ) == selectedMonth
+        }
 
     LazyColumn(
 
@@ -234,21 +277,32 @@ fun RecordScreen() {
                 Modifier.height(30.dp)
             )
 
-            MonthSelector()
+            MonthSelector(
+
+                selectedMonth = selectedMonth,
+
+                onMonthChange = {
+
+                    selectedMonth = it
+                }
+            )
 
             Spacer(
                 Modifier.height(16.dp)
             )
 
             SummarySection(
-                transactions
+                monthTransactions,
+                selectedMonth = selectedMonth
             )
 
             Spacer(
                 Modifier.height(16.dp)
             )
 
-            StatusCard()
+            StatusCard(
+                analyzeResult
+            )
 
             Spacer(
                 Modifier.height(16.dp)
@@ -273,7 +327,7 @@ fun RecordScreen() {
             )
         }
 
-        items(transactions) {
+        items(monthTransactions) {
 
             TransactionItem(it)
         }
@@ -285,7 +339,8 @@ fun RecordScreen() {
 fun SummarySection(
 
     transactions:
-    List<Transaction>
+    List<Transaction>,
+    selectedMonth: String
 ) {
 
     val income =
@@ -320,7 +375,8 @@ fun SummarySection(
 
     RecordSummaryCard(
         income,
-        outcome
+        outcome,
+        selectedMonth = selectedMonth
     )
 }
 
@@ -366,7 +422,10 @@ fun FilterChip(
 }
 
 @Composable
-fun MonthSelector() {
+fun MonthSelector(
+    selectedMonth: String,
+    onMonthChange: (String) -> Unit
+) {
 
     Row(
 
@@ -376,21 +435,49 @@ fun MonthSelector() {
             Arrangement.SpaceBetween
     ) {
 
-        Text("<")
-
         Text(
-            "2024년 5월",
-            fontWeight = FontWeight.Bold
+
+            "<",
+
+            modifier =
+                Modifier.clickable {
+                    onMonthChange(
+                        moveMonth(
+                            selectedMonth,
+                            -1
+                        )
+                    )
+                }
         )
 
-        Text(">")
+        Text(
+            selectedMonth
+                .replace("-", "년 ")
+                    + "월"
+        )
+
+        Text(
+
+            ">",
+
+            modifier =
+                Modifier.clickable {
+                    onMonthChange(
+                        moveMonth(
+                            selectedMonth,
+                            1
+                        )
+                    )
+                }
+        )
     }
 }
 
 @Composable
 fun RecordSummaryCard(
     income: Int,
-    outcome: Int
+    outcome: Int,
+    selectedMonth: String
 ) {
 
     val percent =
@@ -436,11 +523,15 @@ fun RecordSummaryCard(
                     Modifier.weight(1f)
 
             ) {
-
                 Text(
-                    text = "이번 달 지출",
+                    text =
+                        selectedMonth
+                            .replace("-", "년 ")
+                                + "월 지출"
+                    ,
                     color = Color.Gray,
                     fontSize = 14.sp
+
                 )
 
                 Spacer(
@@ -569,16 +660,48 @@ fun RecordSummaryCard(
 
 
 @Composable
-fun StatusCard() {
+fun StatusCard(
+    result: AnalyzeResponse?
+) {
+    val isOverSpending =
+        result?.spending_status == "과소비"
+
+    val title =
+        if (isOverSpending)
+            "주의!"
+        else
+            "좋아요!"
+
+    val message =
+        if (isOverSpending)
+            "소비 습관을 바꿔보세요."
+        else
+            "예산 범위 내에서 소비하고 있어요."
+
+    val bgColor =
+        if (isOverSpending)
+            Color(0xFFFFF3E0)
+        else
+            Color(0xFFF2F8F0)
+
+    val titleColor =
+        if (isOverSpending)
+            Color(0xFFFF9800)
+        else
+            Color(0xFF2CA85E)
+
+    val icon =
+        if (isOverSpending)
+            "⚠️"
+        else
+            "\uD83D\uDC4D"
 
     Card(
 
         colors =
             CardDefaults.cardColors(
-                containerColor =
-                    Color(0xFFF2F8F0)
+                containerColor = bgColor
             )
-
     ) {
 
         Row(
@@ -589,9 +712,8 @@ fun StatusCard() {
             verticalAlignment =
                 Alignment.CenterVertically
         ) {
-
             Text(
-                "☁",
+                icon,
                 fontSize = 40.sp
             )
 
@@ -602,13 +724,13 @@ fun StatusCard() {
             Column {
 
                 Text(
-                    "좋아요!",
-                    color = Color(0xFF2CA85E),
+                    title,
+                    color = titleColor,
                     fontWeight = FontWeight.Bold
                 )
 
                 Text(
-                    "예산 범위 내에서 소비하고 있어요."
+                    message
                 )
             }
         }
@@ -659,144 +781,197 @@ fun CategoryCard(
                 Modifier.padding(20.dp)
         ) {
 
-            Text(
-
-                text = "카테고리별 지출",
-
-                fontWeight =
-                    FontWeight.Bold,
-
-                fontSize = 18.sp
-            )
-
-            Spacer(
-                Modifier.height(20.dp)
-            )
-
-            Box(
-
-                modifier =
-                    Modifier
-                        .fillMaxWidth(),
-
-                contentAlignment =
-                    Alignment.Center
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
             ) {
 
-                Canvas(
-
-                    modifier =
-                        Modifier.size(120.dp)
-                ) {
-
-                    val colors = listOf(
-
-                        Color(0xFF4CAF50),
-
-                        Color(0xFFFF9800),
-
-                        Color(0xFF2196F3),
-
-                        Color(0xFFE91E63),
-
-                        Color(0xFF9C27B0)
-                    )
-
-                    var startAngle = -90f
-
-                    categories.forEachIndexed {
-
-                            index,
-                            category ->
-
-                        val value =
-                            category.second
-
-                        val sweepAngle =
-
-                            if (total == 0)
-
-                                0f
-
-                            else
-
-                                value.toFloat() /
-                                        total *
-                                        360f
-
-                        drawArc(
-
-                            color =
-                                colors[index],
-
-                            startAngle =
-                                startAngle,
-
-                            sweepAngle =
-                                sweepAngle,
-
-                            useCenter =
-                                false,
-
-                            style =
-                                Stroke(
-                                    width = 80f
-                                ),
-
-                            size =
-                                Size(
-                                    size.width,
-                                    size.height
-                                )
-                        )
-
-                        startAngle +=
-                            sweepAngle
-                    }
-                }
-
                 Text(
-
-                    text =
-
-                        if (total == 0)
-
-                            "0원"
-
-                        else
-
-                            "${total}원",
-
-                    fontWeight =
-                        FontWeight.Bold
+                    text = "카테고리별 지출",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp
                 )
             }
 
             Spacer(
                 Modifier.height(20.dp)
             )
-            categories.forEach {
 
-                val percent =
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier.size(100.dp),
+                    contentAlignment = Alignment.Center
+                ) {
 
-                    if (total == 0)
+                    Canvas(
+                        modifier = Modifier.size(100.dp)
+                    ) {
 
-                        0
+                        val colors = listOf(
 
-                    else
+                            Color(0xFF62D26F),
 
-                        (
-                                it.second * 100
-                                        / total
-                                )
+                            Color(0xFF59CBE8),
 
-                Text(
-                    "${it.first} ${percent}%"
-                )
+                            Color(0xFFFFB830),
+
+                            Color(0xFFFF7A45),
+
+                            Color(0xFF8D8DFF),
+
+                            Color(0xFFDADADA)
+                        )
+
+                        var startAngle = -90f
+
+                        categories.forEachIndexed { index, category ->
+
+                            val value = category.second
+
+                            val sweepAngle =
+
+                                if (total == 0)
+
+                                    0f
+
+                                else
+
+                                    value.toFloat() /
+                                            total *
+                                            360f
+
+                            drawArc(
+
+                                color = colors[index],
+
+                                startAngle = startAngle,
+
+                                sweepAngle = sweepAngle,
+
+                                useCenter = false,
+
+                                style = Stroke(width = 50f)
+                            )
+
+                            startAngle += sweepAngle
+                        }
+                    }
+
+                    Column(
+                        horizontalAlignment =
+                            Alignment.CenterHorizontally
+                    ) {
+
+                        Text(
+                            text = "%,d원".format(total),
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 12.sp
+                        )
+
+                        Text(
+                            text = "총 지출",
+                            color = Color.Gray,
+                            fontSize = 10.sp
+                        )
+                    }
+                }
 
                 Spacer(
-                    Modifier.height(6.dp)
+                    modifier = Modifier.width(20.dp)
                 )
+
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
+
+                    val colors = listOf(
+
+                        Color(0xFF62D26F),
+
+                        Color(0xFF59CBE8),
+
+                        Color(0xFFFFB830),
+
+                        Color(0xFFFF7A45),
+
+                        Color(0xFF8D8DFF)
+                    )
+
+                    categories.forEachIndexed { index, category ->
+
+                        val percent =
+
+                            if (total == 0)
+
+                                0
+
+                            else
+
+                                category.second * 100 / total
+
+                        Row(
+
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp),
+
+                            verticalAlignment =
+                                Alignment.CenterVertically
+                        ) {
+
+                            Box(
+
+                                modifier = Modifier
+                                    .size(10.dp)
+                                    .background(
+                                        colors[index],
+                                        CircleShape
+                                    )
+                            )
+
+                            Spacer(
+                                modifier = Modifier.width(8.dp)
+                            )
+
+                            Text(
+
+                                text = category.first,
+
+                                modifier = Modifier.weight(1f),
+
+                                fontSize = 13.sp
+                            )
+
+                            Text(
+
+                                text =
+                                    "%,d원".format(
+                                        category.second
+                                    ),
+
+                                fontSize = 13.sp,
+
+                                color = Color.DarkGray
+                            )
+
+                            Spacer(
+                                modifier = Modifier.width(4.dp)
+                            )
+
+                            Text(
+
+                                text = "($percent%)",
+
+                                fontSize = 12.sp,
+
+                                color = Color.Gray
+                            )
+                        }
+                    }
+                }
             }
         }
     }
@@ -991,4 +1166,51 @@ private fun insertDummyData(
         "",
         "올리브영"
     )
+}
+
+
+private fun getYearMonth(
+    time: Long
+): String {
+
+    val sdf =
+
+        java.text.SimpleDateFormat(
+            "yyyy-MM",
+            java.util.Locale.KOREA
+        )
+
+    return sdf.format(
+        java.util.Date(time)
+    )
+}
+
+private fun moveMonth(
+    current: String,
+    offset: Int
+): String {
+
+    val formatter =
+
+        java.time.format
+            .DateTimeFormatter
+            .ofPattern("yyyy-MM")
+
+    val ym =
+
+        java.time.YearMonth
+            .parse(
+                current,
+                formatter
+            )
+
+    return ym
+
+        .plusMonths(
+            offset.toLong()
+        )
+
+        .format(
+            formatter
+        )
 }

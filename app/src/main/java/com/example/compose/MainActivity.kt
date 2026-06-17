@@ -38,6 +38,11 @@ import androidx.compose.ui.Modifier
 
 import kotlinx.coroutines.launch
 
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.foundation.layout.height
+
 class MainActivity : ComponentActivity() {
 
     override fun onCreate(
@@ -99,8 +104,16 @@ fun MainPagerScreen() {
     Scaffold(
 
         bottomBar = {
+            NavigationBar(
+                containerColor =
+                    Color(0xFFF8F7F3),
 
-            NavigationBar {
+                tonalElevation = 0.dp,
+
+                modifier =
+                    Modifier
+                        .height(120.dp)
+            ) {
 
                 NavigationBarItem(
                     selected = pagerState.currentPage == 0,
@@ -117,7 +130,26 @@ fun MainPagerScreen() {
                     },
                     label = {
                         Text("홈")
-                    }
+                    },
+
+                    colors =
+                        NavigationBarItemDefaults.colors(
+
+                            selectedIconColor =
+                                Color(0xFF24A050),
+
+                            selectedTextColor =
+                                Color(0xFF24A050),
+
+                            unselectedIconColor =
+                                Color.Gray,
+
+                            unselectedTextColor =
+                                Color.Gray,
+
+                            indicatorColor =
+                                Color(0xFFE8F6ED)
+                        )
                 )
 
                 NavigationBarItem(
@@ -135,7 +167,25 @@ fun MainPagerScreen() {
                     },
                     label = {
                         Text("기록")
-                    }
+                    },
+                    colors =
+                        NavigationBarItemDefaults.colors(
+
+                            selectedIconColor =
+                                Color(0xFF24A050),
+
+                            selectedTextColor =
+                                Color(0xFF24A050),
+
+                            unselectedIconColor =
+                                Color.Gray,
+
+                            unselectedTextColor =
+                                Color.Gray,
+
+                            indicatorColor =
+                                Color(0xFFE8F6ED)
+                        )
                 )
 
                 NavigationBarItem(
@@ -153,7 +203,25 @@ fun MainPagerScreen() {
                     },
                     label = {
                         Text("분석")
-                    }
+                    },
+                    colors =
+                        NavigationBarItemDefaults.colors(
+
+                            selectedIconColor =
+                                Color(0xFF24A050),
+
+                            selectedTextColor =
+                                Color(0xFF24A050),
+
+                            unselectedIconColor =
+                                Color.Gray,
+
+                            unselectedTextColor =
+                                Color.Gray,
+
+                            indicatorColor =
+                                Color(0xFFE8F6ED)
+                        )
                 )
             }
         }

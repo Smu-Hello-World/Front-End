@@ -51,6 +51,12 @@ import retrofit2.Callback
 import retrofit2.Response
 import com.example.compose.Screen
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.ModalDrawerSheet
+import androidx.compose.material3.rememberDrawerState
+import androidx.compose.material3.DrawerValue
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 
 data class CategoryItem(
 
@@ -63,6 +69,15 @@ data class CategoryItem(
     val bgColor: Color,
 
     val accentColor: Color
+)
+
+data class TipData(
+
+    val title: String,
+
+    val description: String,
+
+    val imageRes: Int
 )
 
 @Composable
@@ -173,8 +188,7 @@ fun HomeScreen(
             )
         ) {
             item {
-                TopBar()
-                Spacer(modifier = Modifier.height(18.dp))
+                Spacer(modifier = Modifier.height(16.dp))
                 HeroSection()
                 SummaryCard(
                     income = incomeMoney,
@@ -183,34 +197,18 @@ fun HomeScreen(
                         onScreenChange(Screen.ANALYSIS)
                     }
                 )
-                Spacer(modifier = Modifier.height(16.dp))
-                TipCard()
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(14.dp))
+                TipCard(
+                    analyzeResult
+                )
+                Spacer(modifier = Modifier.height(14.dp))
                 CategoryHeader()
                 Spacer(modifier = Modifier.height(10.dp))
                 TopCategoryRow(
                     analyzeResult
                 )
-                Spacer(modifier = Modifier.height(12.dp))
             }
         }
-    }
-}
-
-@Composable
-private fun TopBar() {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            imageVector = Icons.Default.Menu,
-            contentDescription = null,
-            tint = Color(0xFF111111),
-            modifier = Modifier.size(28.dp)
-        )
-
     }
 }
 
@@ -275,8 +273,97 @@ private fun HeroSection() {
         }
     }
 }
+
+fun getTodayTip(
+    result: AnalyzeResponse?
+): TipData {
+
+    if (result == null) {
+
+        return TipData(
+
+            "소비 분석 준비중",
+
+            "소비 데이터를 수집하고 있어요",
+
+            R.drawable.tip_saving
+        )
+    }
+
+    return when {
+
+        result.shop_status == "과소비" ->
+
+            TipData(
+
+                "쇼핑 과소비",
+
+                "구매 전 하루만 고민해보세요",
+
+                R.drawable.tip_shopping
+            )
+
+        result.cafe_status == "과소비" ->
+
+            TipData(
+
+                "카페 과소비",
+
+                "텀블러를 사용하면 지출을 줄일 수 있어요",
+
+                R.drawable.tip_coffee
+            )
+
+        result.food_status == "과소비" ->
+
+            TipData(
+
+                "식비 과소비",
+
+                "배달보다 학식이나 직접 요리를 추천해요",
+
+                R.drawable.tip_food
+            )
+
+        result.play_status == "과소비" ->
+
+            TipData(
+
+                "놀거리 과소비",
+
+                "이번 주는 무료 취미를 즐겨보세요",
+
+                R.drawable.tip_play
+            )
+
+        else -> {
+
+            val randomTips = listOf(
+
+                TipData(
+                    "절약 팁",
+                    "이번 달 소비 목표를 세워보세요",
+                    R.drawable.tip_target
+                ),
+
+                TipData(
+                    "절약 팁",
+                    "작은 저축이 큰 자산이 됩니다",
+                    R.drawable.tip_saving
+                ),
+            )
+
+            randomTips.random()
+        }
+    }
+}
+
 @Composable
-private fun TipCard() {
+private fun TipCard(
+    result: AnalyzeResponse?
+) {
+    val tip = getTodayTip(result)
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
@@ -293,7 +380,7 @@ private fun TipCard() {
                 modifier = Modifier.weight(1f)
             ) {
                 Text(
-                    text = "오늘의 한 줄 팁",
+                    text = tip.title,
                     fontSize = 16.sp,
                     fontFamily = Pretendard,
                     fontWeight = FontWeight.Bold,
@@ -301,23 +388,22 @@ private fun TipCard() {
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "작은 지출도 쌓이면 큰 금액이 돼요!",
+                    text = tip.description,
                     fontSize = 12.sp,
                     fontFamily = Pretendard,
                     color = Color(0xFF222222)
                 )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "커피 한 잔 대신 텀블러를 챙겨보세요",
-                    fontSize = 11.sp,
-                    fontFamily = Pretendard,
-                    color = Color(0xFF444444)
-                )
             }
+            Image(
 
-            Text(
-                text = "🥤",
-                fontSize = 42.sp
+                painter =
+                    painterResource(
+                        tip.imageRes
+                    ),
+
+                contentDescription = null,
+
+                modifier = Modifier.size(40.dp)
             )
         }
     }

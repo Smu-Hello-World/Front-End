@@ -19,8 +19,91 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 
+import androidx.compose.runtime.*
+import androidx.compose.ui.platform.LocalContext
+
+import com.example.compose.utils.JsonManager
+
+import com.example.compose.network.AnalyzeRequest
+import com.example.compose.network.AnalyzeResponse
+import com.example.compose.network.RetrofitClient
+
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+
 @Composable
 fun AnalysisScreen() {
+
+    var analyzeResult by remember {
+        mutableStateOf<AnalyzeResponse?>(null)
+    }
+
+    val context =
+        LocalContext.current
+
+    var transactions by remember {
+
+        mutableStateOf(
+            emptyList<Transaction>()
+        )
+    }
+
+    LaunchedEffect(Unit) {
+
+        val json =
+            JsonManager.readBankData(
+                context
+            )
+
+        if (json == "데이터 없음")
+            return@LaunchedEffect
+
+        transactions =
+            loadTransactions(json)
+
+        val requestList =
+
+            transactions.map {
+
+                AnalyzeRequest(
+
+                    money = it.money,
+
+                    type = it.type,
+
+                    receiver = it.receiver
+                )
+            }
+
+        RetrofitClient.api
+            .analyzeConsumption(
+                requestList
+            )
+            .enqueue(
+
+                object :
+                    Callback<AnalyzeResponse> {
+
+                    override fun onResponse(
+                        call: Call<AnalyzeResponse>,
+                        response: Response<AnalyzeResponse>
+                    ) {
+
+                        analyzeResult =
+                            response.body()
+                    }
+
+                    override fun onFailure(
+                        call: Call<AnalyzeResponse>,
+                        t: Throwable
+                    ) {
+
+                        t.printStackTrace()
+                    }
+                }
+            )
+    }
 
     var selectedTab by remember {
         mutableIntStateOf(0)
@@ -74,7 +157,10 @@ fun AnalysisScreen() {
 
             0 -> AnalysisSummaryTab()
 
-            1 -> AnalysisPatternTab()
+            1 -> AnalysisPatternTab(
+                transactions = transactions,
+                analyzeResult = analyzeResult
+            )
 
             2 -> AnalysisCategoryTab()
 
