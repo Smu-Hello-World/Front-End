@@ -1,6 +1,6 @@
 package com.example.compose.data
 
-object DataManager {
+object  DataManager {
 
     var lastType: String = ""
 

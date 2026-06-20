@@ -1113,14 +1113,6 @@ private fun insertDummyData(
 
     JsonManager.saveBankData(
         context,
-        "입금",
-        "1500000",
-        "회사",
-        "입출금통장"
-    )
-
-    JsonManager.saveBankData(
-        context,
         "출금",
         "4500",
         "",
@@ -1161,10 +1153,10 @@ private fun insertDummyData(
 
     JsonManager.saveBankData(
         context,
-        "출금",
+        "입금",
         "15000",
         "",
-        "올리브영"
+        "회사"
     )
 }
 

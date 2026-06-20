@@ -111,17 +111,29 @@ private data class AnalysisCategory(
 @Composable
 fun AnalysisScreen() {
     val context = LocalContext.current
-    var transactions by remember { mutableStateOf(emptyList<Transaction>()) }
-    var selectedMonth by remember { mutableStateOf("") }
-    var analyzeResult by remember { mutableStateOf<AnalyzeResponse?>(null) }
-    var selectedTab by remember { mutableIntStateOf(0) }
+    var transactions by remember {
+        mutableStateOf(emptyList<Transaction>())
+    }
+    var selectedMonth by remember {
+        mutableStateOf("")
+    }
+    var analyzeResult by remember {
+        mutableStateOf<AnalyzeResponse?>(null)
+    }
+    var selectedTab by remember {
+        mutableIntStateOf(0)
+    }
 
     LaunchedEffect(Unit) {
         val json = JsonManager.readBankData(context)
-        if (json.contains("없음")) return@LaunchedEffect
 
-        transactions = runCatching { loadTransactions(json) }.getOrDefault(emptyList())
-        selectedMonth = transactions.maxByOrNull { it.time }?.let { yearMonthKey(it.time) }
+        if (json.contains("없음"))
+            return@LaunchedEffect
+
+        transactions =
+            runCatching { loadTransactions(json) }.getOrDefault(emptyList())
+        selectedMonth =
+            transactions.maxByOrNull { it.time }?.let { yearMonthKey(it.time) }
             ?: SimpleDateFormat("yyyy-MM", Locale.KOREA).format(Date())
     }
 
@@ -158,8 +170,6 @@ fun AnalysisScreen() {
             .fillMaxSize()
             .background(Color.White)
     ) {
-        AnalysisHeader()
-
         val tabs = listOf("요약", "소비패턴", "카테고리", "비교")
         ScrollableTabRow(
             selectedTabIndex = selectedTab,
@@ -195,17 +205,24 @@ fun AnalysisScreen() {
         }
 
         when (selectedTab) {
-            0 -> SummaryTab(analyzeResult, monthTransactions)
+            0 -> SummaryTab(
+                analyzeResult,
+                monthTransactions
+            )
             1 -> PatternTab(
                 result = analyzeResult,
                 transactions = monthTransactions,
                 selectedMonth = selectedMonth,
-                onMonthChange = { selectedMonth = shiftMonth(selectedMonth, it) }
+                onMonthChange = {
+                    selectedMonth = shiftMonth(selectedMonth, it)
+                }
             )
             2 -> CategoryTab(
                 result = analyzeResult,
                 selectedMonth = selectedMonth,
-                onMonthChange = { selectedMonth = shiftMonth(selectedMonth, it) }
+                onMonthChange = {
+                    selectedMonth = shiftMonth(selectedMonth, it)
+                }
             )
             3 -> CompareTab(
                 result = analyzeResult,
